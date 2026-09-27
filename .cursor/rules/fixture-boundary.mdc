@@ -1,0 +1,22 @@
+---
+description: Fixture architecture, lifecycle, and page object registration rules
+globs: fixtures/**/*.ts
+alwaysApply: true
+---
+
+# Fixture Architecture and Boundary Rules
+
+1. **Page Object Registration**:
+   - Register all page objects in `fixtures/pom/page-object-fixture.ts`.
+   - Update both the fixture interface (`PageObjectFixtures`) and the implementation in `baseTest.extend(...)` together.
+   - Specs never instantiate page objects via `new`. They receive them as injected fixtures.
+2. **Auto Fixture Lifecycle (Execution Order)**:
+   - `_ensureAuthSession`: Calls `ensureFreshAuthSession(page)` before each test unless `authSessionMode === 'skip'`. In token auth mode, refreshes token and localStorage state.
+   - `_syncSessionStorage`: Uses `page.addInitScript` to synchronize OIDC and onboarding tokens from `localStorage` into `sessionStorage`.
+   - `_seedOnboardingAssistantState`: Seeds onboarding dismissal flags unless `onboardingBypassMode === 'skip'`.
+3. **Fixture Merging**:
+   - `fixtures/pom/test-options.ts` combines POM fixtures and direct API fixtures using `mergeTests(pomTest, apiTest)`.
+   - Always re-export `expect` and `request` from `test-options.ts`.
+4. **Options Handling**:
+   - `authSessionMode: 'default' | 'skip'` (Use `'skip'` for unauthenticated or auth bootstrap tests).
+   - `onboardingBypassMode: 'default' | 'skip'` (Use `'skip'` only for tests validating the onboarding assistant itself).

@@ -1,0 +1,32 @@
+---
+description: Mandatory UI discovery protocol using Playwright CLI before authoring tests
+globs: **/*
+alwaysApply: true
+---
+
+# Playwright UI Discovery Protocol
+
+Before authoring or extending page objects and test specs, follow this discovery workflow:
+
+1. **Resolve Environment**:
+   - Determine `ENVIRONMENT` from the active `debug_env` (defaulting to `staging`).
+   - Ensure the corresponding `env/.env.<slug>` exists and has valid credentials.
+
+2. **Establish Authenticated State**:
+   - Execute the setup project to generate a fresh session storage file:
+     ```bash
+     ENVIRONMENT=<slug> npx playwright test --project=setup
+     ```
+   - Verify that `playwright/.auth/userSession.json` is generated.
+
+3. **Launch Discovery via Playwright CLI / Codegen**:
+   - Load the saved state and navigate to the target `BASE_URL`:
+     ```bash
+     npx playwright codegen --load-storage=playwright/.auth/userSession.json <BASE_URL>
+     ```
+   - Explore the real user flow, verify readiness anchors, and observe exact labels and roles.
+
+4. **Verify Locators in Real-Time**:
+   - Test candidate locators against the live page.
+   - Use only locators that reliably match elements.
+   - If UI discovery fails (e.g., environment down, auth rejected), **STOP**. Do not speculate or make assumptions about unverified page structure.

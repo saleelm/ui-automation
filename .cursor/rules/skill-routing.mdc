@@ -1,0 +1,19 @@
+---
+description: Workflow routing for discovering UI, implementing tests via skills, and resolving debug_env
+globs: **/*
+alwaysApply: true
+---
+
+# Skill Routing and Execution Workflow
+
+1. **Discovery**: Always use the Playwright CLI to discover real application flows and selectors before authoring tests or page objects. Never guess or hallucinate locators.
+2. **Implementation Guidance**: Refer to specialized skills located in `.cursor/skills/` for domain-specific implementation steps:
+   - `ui-discovery-before-authoring`: Step-by-step UI exploration protocol.
+   - `page-object-authoring`: Creating and extending page objects extending `BasePage`.
+   - `fixture-registration`: Registering page objects and auto fixtures in `page-object-fixture.ts`.
+   - `spec-authoring`: Writing clean, fixture-driven specs using test steps and metadata.
+   - `api-interception`: Using route helpers in `helpers/api/`.
+   - `api-schema-authoring`: Authoring Zod schemas for request/response payloads.
+   - `auth-and-session`: Working with token vs UI auth and session state storage.
+   - `failure-triage`: Investigating test and run failures.
+3. **Environment Resolution (`debug_env`)**: Always resolve `debug_env` to the appropriate `ENVIRONMENT` slug and corresponding `env/.env.<slug>` before executing any live command or discovery session. Default to `staging` if unspecified.

@@ -1,0 +1,37 @@
+---
+description: Authentication patterns, token injection, storage keys, and setup requirements
+globs: **/*
+alwaysApply: true
+---
+
+# Authentication Patterns
+
+### Storage and Session
+- Application authenticated session state lives in **both localStorage and sessionStorage**, not cookies alone.
+- Mandatory keys:
+  - `oidc.user:<authority>:<clientId>`: Full OIDC user profile JSON.
+  - `user_auth_token`: Raw access token.
+  - `user`: User identity metadata JSON.
+  - `oidc-config-variables`: OIDC client configuration JSON.
+  - `commonDataPlaneId`: Optional data plane identifier.
+- Synchronizing storage: An auto-fixture copies keys from localStorage into sessionStorage on every navigation.
+
+### Auth Modes
+- Selected strictly via `AppConfig.authMode` (`AUTH_MODE` env var: `token` or `ui`).
+- **Token Mode**: Password-grant against Keycloak, fetches user info, injects into storage, then navigates to `/`. Before each test, `ensureFreshAuthSession(page)` injects fresh token credentials.
+- **UI Mode**: Navigates to `/`, executes two-step login (username -> `#kc-login` -> password -> `#kc-login`), handles inline error indicators. `ensureFreshAuthSession(page)` is a no-op in UI mode.
+
+### Setup and Validation
+- Setup project (`tests/auth.setup.ts`) executes `bootstrapAuthStorageState`.
+- It must specify `test.use({ authSessionMode: 'skip' })` to avoid premature re-injection.
+- A session is only valid when `GET /v2/tenant/features` returns `200` and the host matches `BASE_URL` without containing `/realms/`.
+- Saves state to `playwright/.auth/userSession.json`.
+
+### Unauthenticated Tests
+- To test unauthenticated flows or the login page itself:
+  ```ts
+  test.use({
+    storageState: { cookies: [], origins: [] },
+    authSessionMode: 'skip',
+  });
+  ```

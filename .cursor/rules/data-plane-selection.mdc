@@ -1,0 +1,16 @@
+---
+description: Rules for data-plane selection, dynamic naming, and environment independence
+globs: **/*
+alwaysApply: true
+---
+
+# Data Plane Selection Rules
+
+1. **No Hardcoded Data Plane Identifiers**:
+   - Never hardcode data plane names (e.g. `"prod-dp-1"`, `"qa-east-plane"`) or IDs in page objects, helpers, constants, or test specs.
+   - Do **NOT** create a TypeScript map or dictionary mapping environments to data plane names.
+2. **Default Selection Behavior**:
+   - If the application UI already selects a default data plane upon loading and the test is not specifically testing data plane switching, **leave the default selected**.
+3. **Configured Overrides**:
+   - When a test explicitly requires selecting a specific data plane, read the value from `AppConfig.configuredDataPlaneOption` (populated via `DATA_PLANE_OPTION` in the environment).
+   - If `AppConfig.configuredDataPlaneOption` is not set, interact with the existing selected option or select the first available option in the dropdown dynamically.

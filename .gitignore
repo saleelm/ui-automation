@@ -1,0 +1,19 @@
+node_modules/
+dist/
+playwright-report/
+blob-report/
+allure-results/
+allure-report/
+test-results/
+cli-artifacts/
+.playwright/
+.playwright-cli/
+junit-results/
+
+# Env files: ignore env/.env.* except env/.env.*.example
+env/.env.*
+!env/.env.*.example
+
+# Auth state: ignore auth artifacts but keep directory gitkeep
+playwright/.auth/*
+!playwright/.auth/.gitkeep

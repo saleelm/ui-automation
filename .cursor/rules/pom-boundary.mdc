@@ -1,0 +1,29 @@
+---
+description: Page object boundaries, encapsulation rules, and design principles
+globs: pages/**/*.ts
+alwaysApply: true
+---
+
+# Page Object Boundary and Design Rules
+
+1. **Location and Inheritance**:
+   - Feature page objects reside in `pages/<feature>.page.ts`.
+   - All app pages extend `BasePage`. Reusable component fragments may be standalone helper classes.
+2. **Encapsulation**:
+   - Locators must be `readonly` class properties or specific locator methods.
+   - Page objects own UI interaction methods (click, fill, select), navigation, and reusable widget-level assertions.
+   - Page objects remain strictly **UI-only**. No direct test orchestration, business logic branching, or API test calls.
+3. **Readiness and Navigation**:
+   - `navigate()` must wait for 1–2 visible anchors that prove the page is truly interactive, not merely `domcontentloaded` or URL change.
+   - API response waits must delegate to `this.waitForApiResponse` from `BasePage`, matching method and path fragment (never full hardcoded URLs).
+4. **Prohibited Practices**:
+   - **NO** `page.waitForTimeout` or arbitrary sleep calls under any circumstance.
+   - **NO** hardcoded data-plane names, tenant IDs, or environment URLs.
+   - **NO** speculative locator authoring for unbuilt pages.
+5. **Locator Preference Order**:
+   - 1st: User-facing role (`page.getByRole(...)`)
+   - 2nd: Accessible label (`page.getByLabel(...)`)
+   - 3rd: Visible text (`page.getByText(...)`)
+   - 4th: Explicit test id (`page.getByTestId(...)`)
+   - 5th: Stable semantic CSS selector
+   - Avoid positional indices (`.nth()`) or complex XPath ancestor hops unless verified as the only stable anchor, and explicitly document the rationale in code comments.

@@ -1,0 +1,43 @@
+{
+  "name": "ui-test-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:list": "playwright test --list",
+    "test:setup": "playwright test --project=setup",
+    "test:local:setup": "ENVIRONMENT=local playwright test --project=setup",
+    "test:local": "ENVIRONMENT=local playwright test",
+    "test:local:list": "ENVIRONMENT=local playwright test --list",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:auth": "playwright test --grep @auth",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:sanity": "playwright test --grep @sanity",
+    "test:regression": "playwright test --grep @regression",
+    "test:api": "playwright test --grep @api",
+    "test:e2e": "playwright test --grep @e2e",
+    "clean:results": "rm -rf allure-results test-results allure-report",
+    "report": "allure serve allure-results",
+    "report:allure": "allure generate allure-results --clean -o allure-report",
+    "report:allure:open": "allure open allure-report",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^20.17.19",
+    "allure-commandline": "^2.32.0",
+    "allure-playwright": "^3.2.0",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.20.1",
+    "prettier": "^3.5.1",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.24.1",
+    "zod": "^4.0.0"
+  }
+}

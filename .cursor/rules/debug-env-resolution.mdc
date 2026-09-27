@@ -1,0 +1,34 @@
+---
+description: Environment resolution mapping table and precedence rules
+globs: **/*
+alwaysApply: true
+---
+
+# Debug Environment Resolution
+
+When executing tests, running setup scripts, or opening Playwright CLI discovery sessions, map the requested `debug_env` to the corresponding `ENVIRONMENT` slug and file.
+
+### Mapping Table
+
+| debug_env | ENVIRONMENT | file |
+|---|---|---|
+| Local | local | env/.env.local |
+| Staging | staging | env/.env.staging |
+| Preprod | preprod | env/.env.preprod |
+| QA | qa | env/.env.qa |
+| Dev | dev | env/.env.dev |
+| Dev Azure | dev-azure | env/.env.dev-azure |
+| POC | poc | env/.env.poc |
+| Prod APAC | prod-apac | env/.env.prod-apac |
+| Prod US | prod-us | env/.env.prod-us |
+| Prod EMEA | prod-emea | env/.env.prod-emea |
+
+### Precedence and Defaults
+
+1. **Default**: When `debug_env` is omitted, default to **Staging** (`ENVIRONMENT=staging`, `env/.env.staging`).
+2. **Distinct Environments**: Note that **Preprod** is distinct from **Staging** (`preprod` vs `staging`).
+3. **Precedence**: User-specified `debug_env` always takes precedence over example command lines or hardcoded template strings. If a prompt mentions `ENVIRONMENT=local` in an example command, but the task specifies `debug_env: QA`, you must use `ENVIRONMENT=qa`.
+4. **Loading**: In Playwright CLI and test executions, pass `ENVIRONMENT=<slug>` to ensure `dotenv` loads the right file:
+   ```bash
+   ENVIRONMENT=staging npx playwright test
+   ```

@@ -1,0 +1,22 @@
+---
+description: Requirements for locator validation, evidence, and avoidance of speculative selectors
+globs: **/*
+alwaysApply: true
+---
+
+# Locator Evidence and Verification
+
+1. **No Speculative Locators**:
+   - Never invent or guess locators for unbuilt or unverified pages.
+   - Every locator in a page object must be backed by concrete evidence gathered during Playwright CLI exploration or verified DOM inspection.
+2. **Sibling Copying Prohibited**:
+   - Do not copy locators from a sibling integration or provider (e.g. copying Kafka form locators into a Snowflake form) unless the identical label and readiness anchors were explicitly verified in the DOM.
+3. **Locator Hierarchy**:
+   - Prefer semantic and resilient locator strategies:
+     1. Role with accessible name: `page.getByRole('button', { name: 'Save' })`
+     2. Label: `page.getByLabel('Endpoint URL')`
+     3. Visible text: `page.getByText('Active Pipelines')`
+     4. Test ID: `page.getByTestId('pipeline-card')`
+     5. Stable CSS selector
+4. **Documentation of Fallback Selectors**:
+   - If an XPath ancestor hop or numeric index (`.nth(0)`) is unavoidable, you must document in a comment why no stable role, label, or text anchor was available.

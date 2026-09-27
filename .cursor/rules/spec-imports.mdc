@@ -1,0 +1,29 @@
+---
+description: Spec import rules, test runners, and extension conventions
+globs: tests/**/*.ts
+alwaysApply: true
+---
+
+# Spec Import Rules
+
+1. **Test and Expect Imports**:
+   - Every file under `tests/**/*.ts` **MUST** import `test` and `expect` exclusively from `fixtures/pom/test-options.js` (or relative path like `../../fixtures/pom/test-options.js`).
+   - **NEVER** import `test` directly from `@playwright/test` in test specs.
+   ```ts
+   // Correct
+   import { expect, test } from '../../fixtures/pom/test-options.js';
+
+   // FORBIDDEN
+   import { test, expect } from '@playwright/test';
+   ```
+
+2. **File Extensions in Imports**:
+   - In accordance with ESM resolution, relative imports to local TypeScript modules must explicitly use the `.js` extension.
+   ```ts
+   import { AppConfig } from '../../config/app.config.js';
+   import { Tag } from '../../enums/tags.enum.js';
+   ```
+
+3. **No Direct Page Object Instantiation**:
+   - Never use `new PageObject(page)` in test specs.
+   - Always inject page objects through registered fixtures (e.g. `async ({ loginPage }) => { ... }`).

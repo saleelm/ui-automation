@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@config/*": ["config/*"],
+      "@constants/*": ["constants/*"],
+      "@enums/*": ["enums/*"],
+      "@fixtures/*": ["fixtures/*"],
+      "@helpers/*": ["helpers/*"],
+      "@pages/*": ["pages/*"],
+      "@schemas/*": ["schemas/*"],
+      "@test-data/*": ["test-data/*"]
+    }
+  },
+  "include": [
+    "config/**/*.ts",
+    "constants/**/*.ts",
+    "enums/**/*.ts",
+    "fixtures/**/*.ts",
+    "helpers/**/*.ts",
+    "pages/**/*.ts",
+    "schemas/**/*.ts",
+    "test-data/**/*.ts",
+    "tests/**/*.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": ["node_modules", "dist", "allure-results", "allure-report", "test-results"]
+}

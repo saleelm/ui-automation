@@ -1,0 +1,20 @@
+---
+description: Mandatory typecheck execution after editing TypeScript files
+globs: **/*.ts
+alwaysApply: true
+---
+
+# Typecheck Verification After Edits
+
+1. **Mandatory Check**:
+   - Whenever any TypeScript file (`.ts`) is created or modified, you **MUST** run `npm run typecheck` (`tsc --noEmit`) to verify that no compilation or type errors were introduced.
+2. **Zero Errors Allowed**:
+   - Address all type errors, missing properties, or syntax issues immediately before committing or proceeding with further work.
+   - Note the project's strict compiler options:
+     - `noUncheckedIndexedAccess`: Array or record index access is possibly undefined.
+     - `exactOptionalPropertyTypes`: Do not assign `undefined` to optional fields; use conditional object spreads instead.
+     - `consistent-type-imports`: Ensure imports for types use `import type { ... }`.
+3. **Execution Command**:
+   ```bash
+   npm run typecheck
+   ```

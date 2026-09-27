@@ -1,0 +1,184 @@
+name: Post-Prod Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Git branch to run against'
+        required: true
+        default: 'master'
+        type: string
+      environment:
+        description: 'Production environment'
+        required: true
+        default: 'prod-us'
+        type: choice
+        options:
+          - prod-us
+          - prod-apac
+          - prod-emea
+      workers:
+        description: 'Number of Playwright workers'
+        required: false
+        default: '1'
+        type: string
+      shard_total:
+        description: 'Total number of shards'
+        required: false
+        default: '1'
+        type: string
+      testrail_enabled:
+        description: 'Enable TestRail reporting'
+        required: false
+        default: false
+        type: boolean
+      testrail_run_id:
+        description: 'TestRail Run ID'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      shard-matrix: ${{ steps.generate-matrix.outputs.matrix }}
+    steps:
+      - name: Generate shard matrix
+        id: generate-matrix
+        run: |
+          TOTAL=${{ inputs.shard_total || '1' }}
+          MATRIX=$(node -e "console.log(JSON.stringify(Array.from({length: Number('$TOTAL') || 1}, (_, i) => i + 1)))")
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: prepare
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJson(needs.prepare.outputs.shard-matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Write environment file
+        run: |
+          mkdir -p env
+          case "${{ inputs.environment }}" in
+            prod-us)
+              echo "$ENV_PROD_US" > env/.env.prod-us
+              ;;
+            prod-apac)
+              echo "$ENV_PROD_APAC" > env/.env.prod-apac
+              ;;
+            prod-emea)
+              echo "$ENV_PROD_EMEA" > env/.env.prod-emea
+              ;;
+            *)
+              echo "Unknown production environment: ${{ inputs.environment }}"
+              exit 1
+              ;;
+          esac
+        env:
+          ENV_PROD_US: ${{ secrets.ENV_PROD_US }}
+          ENV_PROD_APAC: ${{ secrets.ENV_PROD_APAC }}
+          ENV_PROD_EMEA: ${{ secrets.ENV_PROD_EMEA }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Execute Post-Prod tests
+        id: run-tests
+        run: |
+          npx playwright test --grep "@smoke|@sanity" --shard="${{ matrix.shard }}/${{ inputs.shard_total }}"
+        env:
+          CI: true
+          ENVIRONMENT: ${{ inputs.environment }}
+          WORKERS: ${{ inputs.workers }}
+          TESTRAIL_ENABLED: ${{ inputs.testrail_enabled }}
+          TESTRAIL_RUN_ID: ${{ inputs.testrail_run_id }}
+
+      - name: Upload Allure results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-shard-${{ matrix.shard }}
+          path: allure-results
+          retention-days: 7
+
+  report:
+    needs: [prepare, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all Allure results
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-artifacts
+
+      - name: Consolidate Allure results
+        run: |
+          mkdir -p allure-results
+          find downloaded-artifacts -type f -exec cp {} allure-results/ \;
+
+      - name: Generate Allure Report
+        run: npm run report:allure
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Publish report to S3
+        run: |
+          BUCKET="${{ vars.S3_BUCKET_NAME || secrets.S3_BUCKET_NAME }}"
+          REGION="${{ vars.AWS_REGION || secrets.AWS_REGION }}"
+          ENVIRONMENT="${{ inputs.environment }}"
+          SUITE_TYPE="post-prod"
+          SANITIZED_BRANCH=$(echo "${{ inputs.branch }}" | sed 's/[^a-zA-Z0-9._-]/-/g')
+          RUN_ID="${{ github.run_id }}"
+          ACTOR="${{ github.actor }}"
+
+          TARGET_PATH="${ENVIRONMENT}/${SUITE_TYPE}/${SANITIZED_BRANCH}/github_user_id-${ACTOR}/github_run_id-${RUN_ID}"
+          LATEST_PATH="${ENVIRONMENT}/${SUITE_TYPE}/latest"
+
+          echo "Publishing to s3://${BUCKET}/${TARGET_PATH}/"
+          aws s3 sync allure-report "s3://${BUCKET}/${TARGET_PATH}" --delete
+
+          echo "Publishing to s3://${BUCKET}/${LATEST_PATH}/"
+          aws s3 sync allure-report "s3://${BUCKET}/${LATEST_PATH}" --delete
+
+          REPORT_URL="https://${BUCKET}.s3.${REGION}.amazonaws.com/${TARGET_PATH}/index.html"
+          LATEST_URL="https://${BUCKET}.s3.${REGION}.amazonaws.com/${LATEST_PATH}/index.html"
+
+          echo "### Post-Prod Verification Report :bar_chart:" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Run Report**: [View Allure Report]($REPORT_URL)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Latest (Post-Prod)**: [View Latest]($LATEST_URL)" >> "$GITHUB_STEP_SUMMARY"

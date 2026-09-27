@@ -1,0 +1,20 @@
+---
+description: Deterministic waiting strategies and prohibition of arbitrary sleep timeouts
+globs: **/*
+alwaysApply: true
+---
+
+# Wait Strategy Rules
+
+1. **Strict Prohibition on `waitForTimeout`**:
+   - Never call `page.waitForTimeout(ms)` or arbitrary `setTimeout` sleeps in page objects, helpers, or test specs unless the user explicitly commands it.
+2. **Deterministic Waiting**:
+   - Use Playwright web-first assertions (`expect(locator).toBeVisible()`, `expect(locator).toHaveText()`), which retry automatically up to configured timeouts.
+   - For page navigation, wait for 1–2 visible anchor elements via `locator.waitFor({ state: 'visible' })` that prove the view is fully interactive.
+3. **API Response Waiting**:
+   - Wait for backend responses using `BasePage.prototype.waitForApiResponse({ method, urlIncludes, queryParams, status, timeout })`.
+   - Never wait on full, hardcoded host URLs.
+4. **Polling Complex Conditions**:
+   - For asynchronous multi-step system states (e.g. pipeline transitions), use `helpers/async.helper.ts` (`pollUntil`) with targeted assertions, not fixed delays.
+5. **Standard Timeouts**:
+   - Refer to `AppConfig.timeouts` (navigation: 30s, action: 15s, expect: 20s, navigateExpect: 40s, pipelineDiagram: 60s, apiRouteFetch: 60s, configurationDeployment: 10m).

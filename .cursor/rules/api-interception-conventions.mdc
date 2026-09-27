@@ -1,0 +1,30 @@
+---
+description: Conventions for network traffic interception, route helpers, and schema validation
+globs: **/*
+alwaysApply: true
+---
+
+# API Interception Conventions
+
+1. **Location and Boundaries**:
+   - Browser network interception mechanics belong strictly in `helpers/api/`, never inline in test specs or page objects.
+   - Direct backend calls use the `apiRequest` fixture (from `fixtures/api/api-request-fixture.ts`). Browser-routed traffic uses `helpers/api/`.
+2. **Endpoint Constants**:
+   - Store endpoint declarations in `constants/api/<feature>.api.constants.ts` as `{ method, path, pattern }`.
+3. **Available Intercept Patterns**:
+   - `interceptValidateAndDrop`: Validates outgoing request payload with Zod, invokes optional callback, then aborts (`route.abort('failed')`).
+   - `interceptValidateAndContinue`: Validates outgoing request payload with Zod, invokes optional callback with `{ method, payload, status, url }`, then allows traffic to continue.
+   - `interceptModifyResponse`: Fetches real backend response, overrides top-level fields, and fulfills.
+   - `interceptPassthroughMutate`: Fetches real response, runs a mutator function on the JSON body, and fulfills.
+   - `interceptFulfillJson`: Fulfills route with static JSON immediately without hitting the network.
+4. **Lifecycle and Cleanup**:
+   - Each intercept helper returns a `RouteCleanup` function (`() => Promise<void>`).
+   - Test specs **must** invoke cleanup after the assertion or inside a `try...finally` block to restore network behavior:
+     ```ts
+     const unroute = await interceptValidateAndContinue(page, AuthApiConstants.token.pattern, Schema);
+     try {
+       // execute UI action
+     } finally {
+       await unroute();
+     }
+     ```

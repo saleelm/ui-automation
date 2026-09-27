@@ -1,0 +1,22 @@
+---
+description: Sourcing Zod schemas from Swagger/OpenAPI specifications
+globs: schemas/**/*.ts
+alwaysApply: true
+---
+
+# Swagger / OpenAPI Schema Sourcing
+
+1. **Source of Truth**:
+   - Prefer official Swagger or OpenAPI specifications from the backend service when generating Zod schemas.
+   - Do not guess schema structures or required properties.
+2. **Minimal Footprint**:
+   - Derive only the specific endpoints and models required for the automated tests. Do not import or generate whole-API monolith schemas.
+3. **File Layout and Naming**:
+   - Schemas are placed under `schemas/<feature>/<endpoint>.schema.ts`.
+   - Pair request and response schemas together in the same file when both exist.
+   - Name schemas clearly using PascalCase: `<Feature><Direction>Schema` (e.g. `LoginRequestSchema`, `SnowflakeDestinationRequestSchema`, `TenantFeaturesResponseSchema`).
+   - Always export both the schema constant and the inferred TypeScript type:
+     ```ts
+     export const LoginRequestSchema = z.object({ ... });
+     export type LoginRequest = z.infer<typeof LoginRequestSchema>;
+     ```
