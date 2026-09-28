@@ -6,7 +6,7 @@ import { AppConfig } from '../config/app.config.js';
 import type { LoginPage } from '../pages/login.page.js';
 import { seedOnboardingSkipFlags } from './onboarding-tour-session.helper.js';
 
-export interface KeycloakAuthInfo {
+export interface AuthEndpointInfo {
   authority: string;
   realm: string;
 }
@@ -34,14 +34,21 @@ let cachedToken: {
   expiresAt: number;
 } | null = null;
 
-export function parseKeycloakUrl(keycloakUrl: string): KeycloakAuthInfo {
-  const url = new URL(keycloakUrl);
-  const match = url.pathname.match(/(.*\/realms\/[^/]+)/);
-  const basePath = match ? match[1] : '';
-  const authority = `${url.origin}${basePath}`;
-  const realmMatch = url.pathname.match(/\/realms\/([^/]+)/);
-  const realm = realmMatch?.[1] ?? 'app';
-  return { authority, realm };
+export function parseAuthUrl(authUrl: string): AuthEndpointInfo {
+  if (!authUrl) {
+    return { authority: '', realm: 'app' };
+  }
+  try {
+    const url = new URL(authUrl);
+    const match = url.pathname.match(/(.*\/realms\/[^/]+)/);
+    const basePath = match ? match[1] : '';
+    const authority = `${url.origin}${basePath}`;
+    const realmMatch = url.pathname.match(/\/realms\/([^/]+)/);
+    const realm = realmMatch?.[1] ?? 'app';
+    return { authority, realm };
+  } catch {
+    return { authority: authUrl, realm: 'app' };
+  }
 }
 
 export async function fetchToken(apiRequestContext?: APIRequestContext): Promise<{
@@ -63,7 +70,7 @@ export async function fetchToken(apiRequestContext?: APIRequestContext): Promise
     password: AppConfig.credentials.password,
   });
 
-  const response = await reqContext.post(AppConfig.keycloakUrl, {
+  const response = await reqContext.post(AppConfig.authUrl, {
     data: bodyParams.toString(),
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -72,12 +79,12 @@ export async function fetchToken(apiRequestContext?: APIRequestContext): Promise
 
   if (!response.ok()) {
     throw new Error(
-      `Failed to obtain Keycloak token: ${response.status()} ${response.statusText()} - ${await response.text()}`,
+      `Failed to obtain auth token: ${response.status()} ${response.statusText()} - ${await response.text()}`,
     );
   }
 
   const tokenData = (await response.json()) as TokenResponse;
-  const { authority } = parseKeycloakUrl(AppConfig.keycloakUrl);
+  const { authority } = parseAuthUrl(AppConfig.authUrl);
 
   let userInfo: UserProfile = {
     email: AppConfig.credentials.email,
@@ -111,7 +118,7 @@ export function buildAuthStorageState(
   tokenData: TokenResponse,
   userInfo: UserProfile,
 ): Record<string, string> {
-  const { authority } = parseKeycloakUrl(AppConfig.keycloakUrl);
+  const { authority } = parseAuthUrl(AppConfig.authUrl);
   const oidcUserKey = `oidc.user:${authority}:${AppConfig.clientId}`;
   const expiresInSec = tokenData.expires_in ?? 3600;
 
@@ -206,7 +213,7 @@ export async function bootstrapAuthStorageState({
     { timeout: AppConfig.timeouts.apiRouteFetch },
   );
 
-  // 2. If AUTH_MODE=token: password-grant against KEYCLOAK_URL, fetch userinfo, inject OIDC/localStorage keys, then goto('/')
+  // 2. If AUTH_MODE=token: password-grant against auth URL, fetch userinfo, inject OIDC/localStorage keys, then goto('/')
   if (AppConfig.authMode === 'token') {
     const { tokenData, userInfo } = await fetchToken(page.request);
     const storageItems = buildAuthStorageState(tokenData, userInfo);

@@ -1,11 +1,3 @@
-function getRequiredEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-  return value;
-}
-
 export type AuthMode = 'token' | 'ui';
 
 export interface AppTimeouts {
@@ -27,7 +19,7 @@ export interface AppConfigType {
     readonly email: string;
     readonly password: string;
   };
-  readonly keycloakUrl: string;
+  readonly authUrl: string;
   readonly clientId: string;
   readonly grantType: string;
   readonly dataplaneId?: string;
@@ -54,14 +46,14 @@ export const AppConfig: AppConfigType = {
   },
   credentials: {
     get email(): string {
-      return getRequiredEnv('QA_USER_EMAIL');
+      return process.env['AUTH_USERNAME'] ?? process.env['USER_EMAIL'] ?? '';
     },
     get password(): string {
-      return getRequiredEnv('QA_USER_PASSWORD');
+      return process.env['AUTH_PASSWORD'] ?? process.env['USER_PASSWORD'] ?? '';
     },
   },
-  get keycloakUrl(): string {
-    return getRequiredEnv('KEYCLOAK_URL');
+  get authUrl(): string {
+    return process.env['AUTH_URL'] ?? '';
   },
   get clientId(): string {
     return process.env['CLIENT_ID'] || 'web-pkce';

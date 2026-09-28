@@ -3,7 +3,7 @@ import { Tag } from '../../enums/tags.enum.js';
 import { buildPracticeFormData } from '../../test-data/practice/practice-form.data.js';
 
 test.describe('Practice Automation Page', () => {
-  // External public practice site: bypass internal Keycloak auth and onboarding gates
+  // External public practice site: bypass auth and onboarding gates
   test.use({
     storageState: { cookies: [], origins: [] },
     authSessionMode: 'skip',

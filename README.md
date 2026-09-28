@@ -1,6 +1,6 @@
 # UI Test Platform
 
-A robust, enterprise-grade UI automation framework built with **Playwright** and **TypeScript** (ESM). Designed for scalable web applications requiring multi-tenant Keycloak authentication, session persistence across `localStorage` and `sessionStorage`, deterministic waiting, API traffic interception, and Page Object Model (POM) fixture injection.
+A robust, enterprise-grade UI automation framework built with **Playwright** and **TypeScript** (ESM). Designed for scalable web applications requiring modern authentication, session persistence across `localStorage` and `sessionStorage`, deterministic waiting, API traffic interception, and Page Object Model (POM) fixture injection.
 
 ---
 
@@ -34,7 +34,7 @@ A robust, enterprise-grade UI automation framework built with **Playwright** and
 
 ## Features
 
-- **Dual-Mode Keycloak Auth**: Supports direct token-based password grant (`AUTH_MODE=token`) or browser-based two-step UI login (`AUTH_MODE=ui`).
+- **Dual-Mode Auth**: Supports direct token-based password grant (`AUTH_MODE=token`) or browser-based two-step UI login (`AUTH_MODE=ui`).
 - **Complete Session Persistence**: Preserves and synchronizes authenticated state across both `localStorage` and `sessionStorage`.
 - **Zero Arbitrary Sleeps**: 100% deterministic waiting using web-first assertions, visible readiness anchors, and response matchers. No `page.waitForTimeout`.
 - **Automated Gate Bypass**: Transparently bypasses onboarding/welcome overlays for test speed, with opt-out capability for gate-specific tests.
@@ -91,7 +91,7 @@ ui-test-platform/
 │   └── random-data.helper.ts  # Test data generators (random strings, UUIDs)
 ├── pages/
 │   ├── base.page.ts           # Abstract BasePage with navigation & API waiting
-│   └── login.page.ts          # Keycloak two-step login page object
+│   └── login.page.ts          # Two-step login page object
 ├── playwright/
 │   └── .auth/                 # Stored session states (.gitkeep committed)
 ├── schemas/
@@ -218,7 +218,7 @@ npx playwright test --grep "@smoke|@sanity"
    - Configures `test.use({ authSessionMode: 'skip' })`.
    - Calls `bootstrapAuthStorageState()`:
      - Waits for `GET /v2/tenant/features` to return `200`.
-     - In `token` mode: executes a Keycloak password grant, gets user info, and injects OIDC keys into `localStorage` and `sessionStorage`.
+     - In `token` mode: executes an OAuth2 password grant, gets user info, and injects OIDC keys into `localStorage` and `sessionStorage`.
      - In `ui` mode: navigates to `/` and executes the two-step login on `LoginPage`.
      - Saves storage state to `playwright/.auth/userSession.json`.
 2. **Fresh Tokens**: In `token` mode, the auto-fixture `_ensureAuthSession` re-injects a fresh token before each test.
