@@ -1,6 +1,6 @@
 ---
 name: page-object-authoring
-description: Standards and patterns for creating page objects extending BasePage in ication
+description: Standards and patterns for creating page objects extending BasePage in the application
 ---
 
 # Page Object Authoring Skill
@@ -9,7 +9,7 @@ Follow these steps when creating or extending page objects in `ui-test-platform`
 
 ### 1. File Location and Extension
 
-- Create the page object at `pages/>.page.ts`.
+- Create the page object at `pages/<feature>.page.ts`.
 - Every application page object must extend `BasePage` from `pages/base.page.js`.
 
 ### 2. Constructor and Locator Definitions

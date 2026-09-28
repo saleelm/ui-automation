@@ -1,5 +1,6 @@
 import { test as baseTest } from '@playwright/test';
 import { LoginPage } from '../../pages/login.page.js';
+import { PracticePage } from '../../pages/practice.page.js';
 import { ensureFreshAuthSession } from '../../helpers/auth.helper.js';
 import { addOnboardingSkipInitScript } from '../../helpers/onboarding-tour-session.helper.js';
 
@@ -13,6 +14,7 @@ export interface PageObjectOptions {
 
 export interface PageObjectFixtures {
   loginPage: LoginPage;
+  practicePage: PracticePage;
 }
 
 export interface PageObjectAutoFixtures {
@@ -29,6 +31,10 @@ export const pomTest = baseTest.extend<
 
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
+  },
+
+  practicePage: async ({ page }, use) => {
+    await use(new PracticePage(page));
   },
 
   // 1. _ensureAuthSession — calls ensureFreshAuthSession unless authSessionMode === 'skip'
