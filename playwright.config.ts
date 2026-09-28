@@ -2,9 +2,16 @@ import { defineConfig, devices } from '@playwright/test';
 import type { ReporterDescription } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import path from 'node:path';
+import fs from 'node:fs';
 
 const environment = process.env['ENVIRONMENT'] || 'qa';
 dotenv.config({ path: path.resolve(process.cwd(), `env/.env.${environment}`) });
+
+const storageStatePath = path.resolve(process.cwd(), 'playwright/.auth/userSession.json');
+if (!fs.existsSync(storageStatePath)) {
+  fs.mkdirSync(path.dirname(storageStatePath), { recursive: true });
+  fs.writeFileSync(storageStatePath, JSON.stringify({ cookies: [], origins: [] }, null, 2));
+}
 
 const isCi = Boolean(process.env['CI']);
 
